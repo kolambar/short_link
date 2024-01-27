@@ -59,3 +59,14 @@ async def record_link(connection_to_mongo: AsyncIOMotorClient, link: str) -> Res
         # Логируем код ответа
         logging.info(f"Код ответа: {response.status_code}")
         return response
+
+
+def get_short_code(short_link: dict) -> str:
+    """
+    Возвращает короткую ссылку для бд из словаря request
+    :param short_link:
+    :return short_code:
+    """
+    short_link = short_link['short_link']
+    short_code = short_link.split('/')[-1]
+    return short_code

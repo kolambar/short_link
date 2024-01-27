@@ -8,8 +8,7 @@ from fastapi import FastAPI, Response
 from fastapi.responses import RedirectResponse
 
 from mongo_client import client
-from utils import record_link
-
+from utils import record_link, get_short_code
 
 app = FastAPI()
 app.state.mongo_client = client
@@ -34,7 +33,7 @@ async def create_short_link(link: dict, request: Request) -> Response:
 
 
 @app.get("/go/{short_link}")
-async def go_to_short_link(short_link: str, request: Request):
+async def go_to_short_link(short_link: str, request: Request) -> RedirectResponse:
     connection_to_mongo: AsyncIOMotorClient = request.app.state.mongo_client["short_link_bd"]  # подключение к бд
 
     # Получаем из бд нужную ссылку и редиректим на нее
@@ -56,6 +55,28 @@ async def go_to_short_link(short_link: str, request: Request):
 
     return response
 
+
+@app.delete("/del/")
+async def go_to_short_link(short_link: dict, request: Request) -> Response:
+    connection_to_mongo: AsyncIOMotorClient = request.app.state.mongo_client["short_link_bd"]  # подключение к бд
+    short_code = get_short_code(short_link)
+    # Удаляем из бд нужную ссылку
+    connection_to_mongo.records.delete_one({"short_link": short_code})
+
+    # Логируем запрос
+    logging.info(
+        f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+        f"Запрос на удаление по короткой ссылки получен от клиента с IP-адресом {request.client.host}, "
+        f"метод запроса: {request.method}, "
+        f"запрашиваемый путь: {request.url}"
+    )
+
+    # Создаем объект Response
+    response = Response(status_code=200, content='Данные с этой короткой ссылкой удалены')
+    # Логируем код ответа
+    logging.info(f"Код ответа: {response.status_code}")
+
+    return response
 
 if __name__ == "__main__":
     import uvicorn
