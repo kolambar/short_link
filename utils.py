@@ -5,7 +5,7 @@ from settings import symbols, domain, logging
 from motor.motor_asyncio import AsyncIOMotorClient
 
 
-def create_short_link() -> str:
+def create_short_code() -> str:
     """
     Генерирует короткую ссылку
     :return short_link:
@@ -29,10 +29,10 @@ async def record_link(connection_to_mongo: AsyncIOMotorClient, link: str) -> Res
     # Проверка на существование этой ссылки в бд
     same_link_from_db = await connection_to_mongo.records.find_one({"link": link})
     if not same_link_from_db:  # Если нет, то генерируем новую
-        short_link = create_short_link()
+        short_link = create_short_code()
         # Если новая короткая ссылка совпадает с какой-то уже существующей, перезаписываем только что созданную
         while await connection_to_mongo.records.find_one({"short_link": short_link}):
-            short_link = create_short_link()
+            short_link = create_short_code()
             logging.info(f"Генерация новой короткой ссылки из-за коллизии: {short_link}")
 
         # Записываем новую короткую ссылку и ссылку от пользователя в бд
