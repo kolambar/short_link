@@ -1,8 +1,8 @@
 import json
 from random import choice
-from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import Response, status
 from settings import symbols, domain, logging
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 def create_short_link() -> str:

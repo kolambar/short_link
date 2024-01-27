@@ -1,5 +1,4 @@
 import datetime
-from typing import Union
 
 from pymongo.errors import ServerSelectionTimeoutError
 
@@ -12,6 +11,7 @@ from fastapi.responses import RedirectResponse
 
 from mongo_client import client
 from utils import record_link, get_short_code
+
 
 app = FastAPI()
 app.state.mongo_client = client
@@ -58,8 +58,6 @@ async def go_to_short_link(short_link: str, request: Request):
             raise HTTPException(status_code=404, detail="Ссылка не найдена")
         link = necessary_dict['link']
 
-
-
         # Создаем объект Response
         response = RedirectResponse(link, status_code=301)
         # Логируем код ответа
@@ -71,6 +69,7 @@ async def go_to_short_link(short_link: str, request: Request):
         logging.error(f"Ошибка подключения к базе данных: {e}")
         # Возвращаем ответ с кодом состояния 500
         return Response(status_code=500, content='Не удалось подключиться к базе данных')
+
 
 @app.delete("/del/")
 async def delete_short_link(short_link: dict, request: Request) -> Response:
@@ -99,9 +98,3 @@ async def delete_short_link(short_link: dict, request: Request) -> Response:
         logging.error(f"Ошибка подключения к базе данных: {e}")
         # Возвращаем ответ с кодом состояния 500
         return Response(status_code=500, content='Не удалось подключиться к базе данных')
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="127.0.0.1", port=8000)
