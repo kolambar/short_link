@@ -1,3 +1,6 @@
+import datetime
+
+from settings import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.requests import Request
 
@@ -13,7 +16,15 @@ app.state.mongo_client = client
 
 
 @app.post("/short_link/")
-async def create_secret(link: dict, request: Request) -> Response:
+async def create_short_link(link: dict, request: Request) -> Response:
+    # Логируем запрос
+    logging.info(
+        f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+        f"Запрос на создание короткой ссылки получен от клиента с IP-адресом {request.client.host}, "
+        f"метод запроса: {request.method}, "
+        f"запрашиваемый путь: {request.url}"
+    )
+    # Получаем ссылку
     link = link['link']
 
     connection_to_mongo: AsyncIOMotorClient = request.app.state.mongo_client["short_link_bd"]  # подключение к бд
@@ -29,7 +40,21 @@ async def go_to_short_link(short_link: str, request: Request):
     # Получаем из бд нужную ссылку и редиректим на нее
     necessary_dict = await connection_to_mongo.records.find_one({"short_link": short_link})
     link = necessary_dict['link']
-    return RedirectResponse(link, status_code=301)
+
+    # Логируем запрос
+    logging.info(
+        f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
+        f"Запрос на переход по короткой ссылки получен от клиента с IP-адресом {request.client.host}, "
+        f"метод запроса: {request.method}, "
+        f"запрашиваемый путь: {request.url}"
+    )
+
+    # Создаем объект Response
+    response = RedirectResponse(link, status_code=301)
+    # Логируем код ответа
+    logging.info(f"Код ответа: {response.status_code}")
+
+    return response
 
 
 if __name__ == "__main__":

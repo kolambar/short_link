@@ -2,12 +2,7 @@ import json
 from random import choice
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import Response, status
-import logging
-from settings import symbols, domain
-
-
-# Настройка логирования
-logging.basicConfig(filename='info', level=logging.INFO, encoding="utf-8")
+from settings import symbols, domain, logging
 
 
 def create_short_link() -> str:
@@ -42,19 +37,25 @@ async def record_link(connection_to_mongo: AsyncIOMotorClient, link: str) -> Res
 
         # Записываем новую короткую ссылку и ссылку от пользователя в бд
         connection_to_mongo.records.insert_one({"short_link": short_link, "link": link})
-        logging.info(f"Короткая ссылка {short_link} успешно записана в базу данных")
+        logging.info(f"Короткая ссылка {short_link} успешно записана в базу данных и отдана пользователю")
 
+        # Создаем объект Response
         response = Response(
             status_code=status.HTTP_201_CREATED,
             content=json.dumps({"short_link": f'{domain}go/{short_link}'})
         )
+        # Логируем код ответа
+        logging.info(f"Код ответа: {response.status_code}")
         return response
     else:  # Если ссылка существует в бд, то возвращаем ее короткую ссылку
         logging.info(f"Ссылка {link} уже существует в базе данных. Возвращаем короткую ссылку: "
                      f"{same_link_from_db['short_link']}")
 
+        # Создаем объект Response
         response = Response(
             status_code=status.HTTP_200_OK,
             content=json.dumps({"short_link": f'{domain}go/{same_link_from_db["short_link"]}'})
         )
+        # Логируем код ответа
+        logging.info(f"Код ответа: {response.status_code}")
         return response
